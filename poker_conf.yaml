@@ -1,0 +1,12 @@
+ai_players:
+  - name: strategic_kane
+    path: /Users/kar.sheng/Projects/kane_abel_poker/src/strategic_kane.py
+  # - name: fish_player
+  #   path: /Users/kar.sheng/Projects/kane_abel_poker/src/fish_player.py
+  # - name: honest_player
+  #   path: /Users/kar.sheng/Projects/kane_abel_poker/src/honest_player.py
+ante: 0
+blind_structure: null
+initial_stack: 10000
+max_round: 10
+small_blind: 10
