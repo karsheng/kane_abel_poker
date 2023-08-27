@@ -4,3 +4,6 @@ PyPokerGUI==0.0.7
 PyYAML==3.12
 tornado==4.4.2
 numpy
+pytest
+setuptools
+-e .

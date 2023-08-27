@@ -21,43 +21,45 @@ class Node:
         # Available bet options for the current node (e.g. [check, bet, fold])
         self.bet_options = bet_options
 
-    def convert_to_relative_pot(
-        self, valid_actions: List[Dict[str, Union[str, int, Dict[str, int]]]], pot: int
-    ) -> List[float]:
-        """
-        Convert the valid actions to a list of actions relative to the pot size.
+    @classmethod
+    def convert_to_relative_pot(cls, valid_actions, pot_size):
+        actions = []
 
-        Parameters:
-        - valid_actions (List[Dict]): A list of valid actions and their amounts.
-        - pot (int): Current pot size.
+        # Handle fold
+        actions.append(0)
 
-        Returns:
-        - List[float]: A list of relative pot size actions.
-        """
+        # Extract call and raise actions
+        call_action = next(
+            action for action in valid_actions if action["action"] == "call"
+        )
+        raise_action = next(
+            action for action in valid_actions if action["action"] == "raise"
+        )
 
-        relative_actions = []
+        # Handle call
+        call_value = call_action["amount"] / pot_size
+        if call_value not in actions:
+            actions.append(call_value)
 
-        for action in valid_actions:
-            if action["action"] == "fold":
-                relative_actions.append(
-                    0
-                )  # Assuming folding will always be 0 relative to pot
-            elif action["action"] == "call":
-                relative_actions.append(action["amount"] / pot)
-            elif action["action"] == "raise":
-                # We use a linspace function from numpy to get even intervals between min and max
-                # This will give us up to 5 points between min and max to ensure the total remains 7 or less.
-                intervals = 5
-                raises = list(
-                    np.linspace(
-                        action["amount"]["min"], action["amount"]["max"], intervals
-                    )
-                )
-                relative_raises = [r / pot for r in raises]
-                relative_actions.extend(relative_raises)
+        # Handle raise based on your specified distribution
+        specified_distribution = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0]
 
-        # To ensure the resulting list has a maximum length of 7
-        return relative_actions[:7]
+        for value in specified_distribution:
+            raise_amount = value * pot_size
+            if (
+                raise_action["amount"]["min"]
+                <= raise_amount
+                <= raise_action["amount"]["max"]
+                and value not in actions
+            ):
+                actions.append(value)
+
+        # Append all-in action if it's not already in the list
+        all_in = raise_action["amount"]["max"] / pot_size
+        if all_in not in actions:
+            actions.append(all_in)
+
+        return actions
 
     def get_strategy(self):
         # This method computes and returns the current strategy for the node based on regret matching
