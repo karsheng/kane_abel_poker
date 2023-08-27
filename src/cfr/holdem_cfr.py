@@ -25,9 +25,6 @@ class Node:
     def convert_to_relative_pot(cls, valid_actions, pot_size):
         actions = []
 
-        # Handle fold
-        actions.append(0)
-
         # Extract call and raise actions
         call_action = next(
             action for action in valid_actions if action["action"] == "call"
@@ -36,28 +33,31 @@ class Node:
             action for action in valid_actions if action["action"] == "raise"
         )
 
+        # Handle fold
+        if call_action["amount"] != 0:
+            actions.append("f")
+
         # Handle call
-        call_value = call_action["amount"] / pot_size
-        if call_value not in actions:
-            actions.append(call_value)
+        actions.append("c")
 
         # Handle raise based on your specified distribution
         specified_distribution = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0]
+        all_in_pot_ratio = raise_action["amount"]["max"] / pot_size
 
         for value in specified_distribution:
+            if value == all_in_pot_ratio:  # Check if the value is same as all-in
+                continue
+
             raise_amount = value * pot_size
             if (
                 raise_action["amount"]["min"]
                 <= raise_amount
                 <= raise_action["amount"]["max"]
-                and value not in actions
             ):
                 actions.append(value)
 
         # Append all-in action if it's not already in the list
-        all_in = raise_action["amount"]["max"] / pot_size
-        if all_in not in actions:
-            actions.append(all_in)
+        actions.append("a")
 
         return actions
 
@@ -147,6 +147,8 @@ class HoldemCFR:
         game_state, events = self.emulator.start_new_round(initial_state)
         valid_actions = events[-1]["valid_actions"]
         pot = events[-1]["round_state"]["pot"]["main"]["amount"]
+
+        infoset_bets = Node.convert_to_relative_pot(valid_actions, pot)
 
         breakpoint()
 
