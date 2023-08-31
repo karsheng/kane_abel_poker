@@ -1,0 +1,31 @@
+{% extends "base_event.html" %}
+
+{% block event_title %}Round Result{% end %}
+
+{% block event_content %}
+<div id="round_result">
+  <h4> Winner => {{ ",".join([player['name'] for player in winners]) }}</h4>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>player</td>
+        <th>hand</th>
+        <th>hole_card_1</th>
+        <th>hole_card_2</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for hand in hand_info %}
+      <tr>
+        <td>
+          {{ [player['name'] for player in round_state['seats'] if player['uuid']==hand['uuid']][0] }}
+        </td>
+        <td>{{ hand['hand']['hand']['strength'] if hand['hand']['hand']['strength'] == 'FLASH' else 'FLUSH'}}</td>
+        <td><img class="card" src="{{ static_url("images/card_%s.png" % hole_cards[hand['uuid']][0]) }}" ></td>
+        <td><img class="card" src="{{ static_url("images/card_%s.png" % hole_cards[hand['uuid']][1]) }}" ></td>
+      </tr>
+      {% end %}
+    </tbody>
+  </table>
+</div>
+{% end %}
