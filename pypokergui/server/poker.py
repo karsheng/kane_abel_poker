@@ -75,6 +75,9 @@ class PokerWebSocketHandler(tornado.websocket.WebSocketHandler):
         elif "action_start_game" == message_type:
             if global_game_manager.is_playing_poker:
                 MM.alert_server_restart(self, self.uuid, self.sockets)
+                tornado.autoreload._reload()
+            elif len(global_game_manager.members_info) < 2:
+                MM.alert_players_no(self, self.uuid, self.sockets)
             else:
                 global_game_manager.start_game()
                 MM.broadcast_start_game(self, global_game_manager, self.sockets)

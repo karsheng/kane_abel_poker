@@ -9,6 +9,13 @@ def alert_server_restart(handler, uuid, sockets):
     soc.write_message(_gen_alert_server_restart_message(handler))
 
 
+def alert_players_no(handler, uuid, sockets):
+    soc = _find_socket_by_uuid(sockets, uuid)
+    soc.write_message(
+        {"message_type": "alert_players_no", "message": "Not enough players"}
+    )
+
+
 def _gen_alert_server_restart_message(handler):
     message = (
         "Server has already run. Please restart the server to play the game again."
