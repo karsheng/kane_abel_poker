@@ -157,7 +157,7 @@ def setup_config(config):
 def start_server(config_path, port, speed):
     global MODE_SPEED
     with open(config_path, "rb") as f:
-        config = yaml.load(f)
+        config = yaml.safe_load(f)
     setup_config(config)
 
     MODE_SPEED = speed
