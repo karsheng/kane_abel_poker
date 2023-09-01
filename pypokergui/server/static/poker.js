@@ -73,7 +73,8 @@ var updater = {
    *  URL would be "ws://localhost/pokersocket:8888".
    */
   start: function () {
-    var url = "wss://" + location.host + "/pokersocket";
+    const head = location.host == "localhost:8888" ? "ws://" : "wss://";
+    var url = head + location.host + "/pokersocket";
     updater.socket = new WebSocket(url);
     updater.socket.onmessage = function (event) {
       window.console.log("received new message: " + event.data);
