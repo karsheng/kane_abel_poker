@@ -19,7 +19,12 @@ import pypokerengine.utils.action_utils as AU
 import pypokergui.server.game_manager as GM
 import pypokergui.server.message_manager as MM
 
-define("port", default=8080, help="run on the given port", type=int)
+define(
+    "port",
+    default=int(os.environ.get("PORT", 8888)),
+    help="run on the given port",
+    type=int,
+)
 define(
     "config",
     default="poker_conf.yaml",
