@@ -11,6 +11,7 @@ class GameManager(object):
         self.is_playing_poker = False
         self.latest_messages = []
         self.next_player_uuid = None
+        self.round_hole_cards = {}
 
     def define_rule(self, max_round, initial_stack, small_blind, ante, blind_structure):
         self.rule = Engine.gen_game_config(
@@ -54,9 +55,11 @@ class GameManager(object):
 
     def get_current_hole_cards(self):
         players = self.engine.current_state["table"].seats.players
-        return {
+        current_hole_cards = {
             player.uuid: [str(card) for card in player.hole_card] for player in players
         }
+        self.round_hole_cards = current_hole_cards
+        return current_hole_cards
 
     def ask_action_to_ai_player(self, uuid):
         assert uuid in self.ai_players

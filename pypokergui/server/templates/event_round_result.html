@@ -20,9 +20,9 @@
         <td>
           {{ [player['name'] for player in round_state['seats'] if player['uuid']==hand['uuid']][0] }}
         </td>
-        <td>{{ hand['hand']['hand']['strength'] if hand['hand']['hand']['strength'] == 'FLASH' else 'FLUSH'}}</td>
-        <td><img class="card" src="{{ static_url("images/card_%s.png" % hole_cards[hand['uuid']][0]) }}" ></td>
-        <td><img class="card" src="{{ static_url("images/card_%s.png" % hole_cards[hand['uuid']][1]) }}" ></td>
+        <td>{{ hand['hand']['hand']['strength'] }}</td>
+        <td><img height="120px" width="80px" src="{{ static_url("images/card_%s.png" % hole_cards[hand['uuid']][0]) }}" ></td>
+        <td><img height="120px" width="80px" src="{{ static_url("images/card_%s.png" % hole_cards[hand['uuid']][1]) }}" ></td>
       </tr>
       {% end %}
     </tbody>

@@ -83,7 +83,12 @@ def broadcast_update_game(handler, game_manager, sockets, mode="moderate"):
                 _broadcast_message_to_ai(ai_player, update)
             else:
                 socket = _find_socket_by_uuid(sockets, uuid)
-                update["current_hole_cards"] = game_manager.get_current_hole_cards()
+                if update["message"]["message_type"] == "street_start_message":
+                    if update["message"]["round_state"]["street"] == "preflop":
+                        game_manager.get_current_hole_cards()
+
+                update["current_hole_cards"] = game_manager.round_hole_cards
+
                 message = _gen_game_update_message(handler, update)
                 try:
                     socket.write_message(message)
