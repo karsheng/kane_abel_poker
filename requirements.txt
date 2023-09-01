@@ -1,7 +1,7 @@
 click==6.7
 # PyPokerEngine==1.0.1
-PyYAML==3.12
-tornado==4.4.2
+PyYAML
+tornado
 numpy
 pytest
 setuptools
