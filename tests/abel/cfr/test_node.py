@@ -1,4 +1,4 @@
-from src.cfr.holdem_cfr import Node
+from abel.cfr.holdem_cfr import Node
 
 
 class TestNode:

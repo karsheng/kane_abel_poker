@@ -2,16 +2,17 @@ import numpy as np
 from pypokerengine.api.emulator import Emulator
 from pypokerengine.engine.table import Table
 from pypokerengine.engine.player import Player
+from pypokerengine.engine.deck import Deck
 from collections import defaultdict
 from typing import Dict, List, Union
 import random
 from copy import deepcopy
 from pypokerengine.utils.game_state_utils import (
     restore_game_state,
-    attach_hole_card_from_deck,
     attach_hole_card,
 )
 from pypokerengine.utils.card_utils import gen_cards
+import pickle
 
 
 class Node:
@@ -116,8 +117,64 @@ class Node:
         return avg_strategy
 
 
+FULL_DECK = [
+    "SA",
+    "SK",
+    "SQ",
+    "SJ",
+    "ST",
+    "S9",
+    "S8",
+    "S7",
+    "S6",
+    "S5",
+    "S4",
+    "S3",
+    "S2",
+    "HA",
+    "HK",
+    "HQ",
+    "HJ",
+    "HT",
+    "H9",
+    "H8",
+    "H7",
+    "H6",
+    "H5",
+    "H4",
+    "H3",
+    "H2",
+    "CA",
+    "CK",
+    "CQ",
+    "CJ",
+    "CT",
+    "C9",
+    "C8",
+    "C7",
+    "C6",
+    "C5",
+    "C4",
+    "C3",
+    "C2",
+    "DA",
+    "DK",
+    "DQ",
+    "DJ",
+    "DT",
+    "D9",
+    "D8",
+    "D7",
+    "D6",
+    "D5",
+    "D4",
+    "D3",
+    "D2",
+]
+
+
 class HoldemCFR:
-    def __init__(self, iterations):
+    def __init__(self, iterations, custom_deck=None):
         self.emulator = Emulator()
         self.iterations = iterations  # Number of iterations to train
         self.nodes: Dict[str, Node] = {}  # Nodes used in the CFR process
@@ -145,28 +202,57 @@ class HoldemCFR:
             "showdown": 4,
         }
 
+        self.custom_deck = custom_deck
+
     def get_street(self, round_state):
         return self.street_mapper[round_state["street"]]
+
+    def generate_custom_deck(self, cards: List[str]):
+        deck = Deck()
+        deck.deck = gen_cards(cards)
+        deck.shuffle()
+        return deck
+
+    def restore_game_state_fully(self, round_state, cards):
+        game_state = restore_game_state(round_state)
+        for player in game_state["table"].seats.players:
+            hole_card = gen_cards(cards[player.uuid])
+            game_state = attach_hole_card(game_state, player.uuid, hole_card)
+
+        cards_to_exclude = round_state["community_card"] + cards[0] + cards[1]
+
+        if self.custom_deck:
+            deck_cards = [
+                card for card in self.custom_deck if card not in cards_to_exclude
+            ]
+        else:
+            deck_cards = [card for card in FULL_DECK if card not in cards_to_exclude]
+
+        game_state["table"].deck = self.generate_custom_deck(deck_cards)
+
+        game_state["table"].deck.shuffle()
+        return game_state
 
     def cfr_iterations_external(self):
         util = np.zeros(2)  # Utility initialization for both players
 
         # Loop through each iteration to train
         for t in range(1, self.iterations + 1):
+            if t % 100 == 0:
+                print(f"Iteration {t}")
+
             for i in range(2):  # For both players
-                print("Iteration: {}-{}".format(t, i))
                 history = [[], [], [], []]
-                cards = {1: ["SA", "HA"], 0: ["C2", "D7"]}
                 initial_state = self.emulator.generate_initial_game_state(
                     self.players_info
                 )
+                if self.custom_deck:
+                    # breakpoint()
+                    initial_state["table"].deck = self.generate_custom_deck(
+                        self.custom_deck
+                    )
+
                 game_state, events = self.emulator.start_new_round(initial_state)
-
-                # for player in game_state["table"].seats.players:
-                #     hole_card = gen_cards(cards[player.uuid])
-                #     game_state = attach_hole_card(game_state, player.uuid, hole_card)
-
-                # breakpoint()
 
                 util[i] += self.external_cfr(game_state, events, history, 0, i)
 
@@ -193,8 +279,6 @@ class HoldemCFR:
         players: List[Player] = game_state["table"].seats.players
 
         cards = {player.uuid: get_hole_cards(player) for player in players}
-        # if len(community_cards) > 0:
-        #     print(community_cards)
 
         if event["type"] == "event_round_finish":
             regret = 0
@@ -202,12 +286,6 @@ class HoldemCFR:
                 if player.uuid == traversing_player_id:
                     regret += player.stack - 100
                     break
-            # print("Winner: {}".format(event["winners"]))
-            # print("Traversing player: {}".format(traversing_player_id))
-            # print("Hole cards: {}".format(cards))
-            # print(community_cards)
-            # print(history)
-            # breakpoint()
             return regret
 
         # Determine which player is acting based on the number of plays
@@ -220,8 +298,13 @@ class HoldemCFR:
 
             infoset_bets = Node.convert_to_relative_pot(valid_actions, pot)
             hole_cards = get_hole_cards(acting_player)
-            infoset = f"{hole_cards}_{str(community_cards)}_{str(history)}"
 
+            sorted_hole_cards = sorted(hole_cards)
+            sorted_com = community_cards.copy()
+            if len(community_cards) >= 3:
+                sorted_com = sorted(community_cards[:3]) + community_cards[3:]
+
+            infoset = f"{sorted_hole_cards}_{str(sorted_com)}_{str(history)}"
             # If the current infoset doesn't exist in the nodes dictionary, add it
             if infoset not in self.nodes:
                 self.nodes[infoset] = Node(infoset_bets)
@@ -242,7 +325,7 @@ class HoldemCFR:
                         game_state, action, amount
                     )
 
-                    game_state = restore_game_state_fully(round_state, cards)
+                    game_state = self.restore_game_state_fully(round_state, cards)
 
                     # breakpoint()
                     util[a] = self.external_cfr(
@@ -277,7 +360,7 @@ class HoldemCFR:
                     game_state, action, amount
                 )
 
-                game_state = restore_game_state_fully(round_state, cards)
+                game_state = self.restore_game_state_fully(round_state, cards)
                 # breakpoint()
                 util = self.external_cfr(
                     new_game_state,
@@ -292,16 +375,6 @@ class HoldemCFR:
 
                 return util
         return 0
-
-
-def restore_game_state_fully(round_state, cards):
-    game_state = restore_game_state(round_state)
-    for player in game_state["table"].seats.players:
-        hole_card = gen_cards(cards[player.uuid])
-        game_state = attach_hole_card(game_state, player.uuid, hole_card)
-
-    game_state["table"].deck.shuffle()
-    return game_state
 
 
 def get_hole_cards(player: Player):
@@ -327,5 +400,25 @@ def derive_action(a, valid_actions, pot_size):
 
 
 if __name__ == "__main__":
-    k = HoldemCFR(1000)
+    custom_deck = [
+        "SA",
+        "SK",
+        "SQ",
+        "SJ",
+        "ST",
+        "S9",
+        "S8",
+        "S7",
+        "S6",
+    ]
+
+    # Unpickling from a file
+    with open("nodes.pkl", "rb") as file:
+        loaded_data = pickle.load(file)
+
+    k = HoldemCFR(1000000, custom_deck=custom_deck)
+    k.nodes = loaded_data
     k.cfr_iterations_external()
+    # Pickling to a file
+    with open("nodes.pkl", "wb") as file:
+        pickle.dump(k.nodes, file)

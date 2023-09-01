@@ -1,8 +1,8 @@
 from pypokerengine.api.game import setup_config, start_poker
-from src.fish_player import FishPlayer
-from src.prudent_kane import PrudentKane
-from src.strategic_kane import StrategicKane
-from src.kane import Kane
+from kane.fish_player import FishPlayer
+from kane.prudent_kane import PrudentKane
+from kane.strategic_kane import StrategicKane
+from kane.kane import Kane
 
 
 def find_winner(players):
