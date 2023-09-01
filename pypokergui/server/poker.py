@@ -22,7 +22,7 @@ import pypokergui.server.message_manager as MM
 define("port", default=8888, help="run on the given port", type=int)
 define(
     "config",
-    default="/Users/kar.sheng/Projects/kane_abel_poker/poker_conf.yaml",
+    default="poker_conf.yaml",
     help="path to game config",
     type=str,
 )
