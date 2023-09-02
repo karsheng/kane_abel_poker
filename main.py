@@ -3,6 +3,7 @@ from kane.fish_player import FishPlayer
 from kane.prudent_kane import PrudentKane
 from kane.strategic_kane import StrategicKane
 from kane.kane import Kane
+from abel.abel import Abel
 
 
 def find_winner(players):
@@ -24,11 +25,13 @@ def find_winner(players):
 
 temp = []
 for game_count in range(1):
-    config = setup_config(max_round=10, initial_stack=10000, small_blind_amount=5)
+    config = setup_config(max_round=10, initial_stack=100, small_blind_amount=1)
     config.register_player(name="fish_player", algorithm=FishPlayer())
     # config.register_player(name="prudent_player", algorithm=PrudentKane())
-    config.register_player(name="strategic_kane", algorithm=StrategicKane())
+    # config.register_player(name="strategic_kane", algorithm=StrategicKane())
     # config.register_player(name="kane", algorithm=Kane())
+    config.register_player(name="abel", algorithm=Abel("holdemstrat.txt"))
+
     game_result = start_poker(config, verbose=2)
 
     winner = find_winner(game_result["players"])
