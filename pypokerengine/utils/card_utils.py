@@ -22,6 +22,12 @@ def gen_deck(exclude_cards=None):
         deck_ids = [i for i in deck_ids if not i in exclude_ids]
     return Deck(deck_ids)
 
+def gen_cheat_deck(cheat_cards):
+    deck = Deck()
+    deck.deck = gen_cards(cheat_cards)
+    deck.shuffle()
+    return deck
+
 def evaluate_hand(hole_card, community_card):
     assert len(hole_card)==2 and len(community_card)==5
     hand_info = HandEvaluator.gen_hand_rank_info(hole_card, community_card)

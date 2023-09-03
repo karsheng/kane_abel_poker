@@ -1,5 +1,6 @@
 import random
 from collections import OrderedDict
+import copy
 
 from pypokerengine.engine.poker_constants import PokerConstants as Const
 from pypokerengine.engine.table import Table
@@ -7,16 +8,17 @@ from pypokerengine.engine.player import Player
 from pypokerengine.engine.round_manager import RoundManager
 from pypokerengine.engine.message_builder import MessageBuilder
 
+
 class Dealer:
 
-  def __init__(self, small_blind_amount=None, initial_stack=None, ante=None):
+  def __init__(self, small_blind_amount=None, initial_stack=None, ante=None, cheat_deck=None):
     self.small_blind_amount = small_blind_amount
     self.ante = ante if ante else 0
     self.initial_stack = initial_stack
     self.uuid_list = self.__generate_uuid_list()
     self.message_handler = MessageHandler()
     self.message_summarizer = MessageSummarizer(verbose=0)
-    self.table = Table()
+    self.table = Table(cheat_deck)
     self.blind_structure = {}
 
   def register_player(self, player_name, algorithm):
@@ -29,7 +31,7 @@ class Dealer:
       self.message_summarizer.verbose = verbose
 
   def start_game(self, max_round):
-    table = self.table
+    table = copy.deepcopy(self.table)
     self.__notify_game_start(max_round)
     ante, sb_amount = self.ante, self.small_blind_amount
     for round_count in range(1, max_round+1):
@@ -37,6 +39,8 @@ class Dealer:
       table = self.__exclude_short_of_money_players(table, ante, sb_amount)
       if self.__is_game_finished(table): break
       table = self.play_round(round_count, sb_amount, ante, table)
+      table.deck = copy.deepcopy(self.table.deck)
+      table.deck.shuffle()
       table.shift_dealer_btn()
     return self.__generate_game_result(max_round, table.seats)
 
