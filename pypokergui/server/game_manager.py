@@ -6,6 +6,8 @@ class GameManager(object):
     def __init__(self):
         self.rule = None
         self.members_info = []
+        self.player1s = []
+        self.player2s = []
         self.engine = None
         self.ai_players = {}
         self.is_playing_poker = False
@@ -18,12 +20,20 @@ class GameManager(object):
             max_round, initial_stack, small_blind, ante, blind_structure
         )
 
+    def join_ai_player1s(self, name, setup_script_path):
+        ai_uuid = str(len(self.player1s))
+        self.player1s.append(gen_ai_player_info(name, ai_uuid, setup_script_path))
+
+    def join_ai_player2s(self, name, setup_script_path):
+        ai_uuid = str(len(self.player2s))
+        self.player2s.append(gen_ai_player_info(name, ai_uuid, setup_script_path))
+
     def join_ai_player(self, name, setup_script_path):
         ai_uuid = str(len(self.members_info))
         self.members_info.append(gen_ai_player_info(name, ai_uuid, setup_script_path))
 
     def join_human_player(self, name, uuid):
-        self.members_info.append(gen_human_player_info(name, uuid))
+        self.player2s.append(gen_human_player_info(name, uuid))
 
     def get_human_player_info(self, uuid):
         for info in self.members_info:
@@ -43,7 +53,7 @@ class GameManager(object):
         self.ai_players = build_ai_players(self.members_info)
         self.engine = Engine.EngineWrapper()
         use_cheat_deck = False
-        if "abel_player" in name_list:
+        if "abel_player_1" in name_list or "abel_player_2" in name_list:
             use_cheat_deck = True
         self.latest_messages = self.engine.start_game(
             players_info, self.rule, use_cheat_deck

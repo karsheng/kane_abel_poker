@@ -1,10 +1,13 @@
-ai_players:
-  # - name: strategic_kane
-  #   path: /Users/kar.sheng/Projects/kane_abel_poker/kane/strategic_kane.py
-  - name: fish_player
+player1:
+  - name: abel_player_1
+    path: abel/abel_player.py
+  - name: fish_player_1
     path: kane/fish_player.py
-  # - name: honest_player
-  #   path: /Users/kar.sheng/Projects/kane_abel_poker/kane/honest_player.py
+player2:
+  - name: abel_player_2
+    path: abel/abel_player.py
+  - name: fish_player_2
+    path: kane/fish_player.py
 ante: 0
 blind_structure: null
 initial_stack: 100

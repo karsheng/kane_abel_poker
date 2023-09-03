@@ -31,7 +31,7 @@ define(
     help="path to game config",
     type=str,
 )
-define("speed", default="moderate", help="how fast game progress", type=str)
+define("speed", default="fast", help="how fast game progress", type=str)
 
 
 class Application(tornado.web.Application):
@@ -78,12 +78,23 @@ class PokerWebSocketHandler(tornado.websocket.WebSocketHandler):
             global_game_manager.join_human_player(js["name"], self.uuid)
             MM.broadcast_config_update(self, global_game_manager, self.sockets)
         elif "action_start_game" == message_type:
+            player1_uuid = js["player1"]
+            player2_uuid = js["player2"]
             if global_game_manager.is_playing_poker:
                 MM.alert_server_restart(self, self.uuid, self.sockets)
                 tornado.autoreload._reload()
-            elif len(global_game_manager.members_info) < 2:
+            elif player1_uuid is None or player2_uuid is None:
                 MM.alert_players_no(self, self.uuid, self.sockets)
             else:
+                player1 = self._find_dict_by_uuid(
+                    global_game_manager.player1s, player1_uuid
+                )
+                player2 = self._find_dict_by_uuid(
+                    global_game_manager.player2s, player2_uuid
+                )
+                global_game_manager.members_info.append(player1)
+                global_game_manager.members_info.append(player2)
+
                 global_game_manager.start_game()
                 MM.broadcast_start_game(self, global_game_manager, self.sockets)
                 MM.broadcast_update_game(
@@ -142,6 +153,12 @@ class PokerWebSocketHandler(tornado.websocket.WebSocketHandler):
         uuid = game_manager.next_player_uuid
         return uuid and len(uuid) <= 2
 
+    def _find_dict_by_uuid(self, players, target_uuid):
+        for d in players:
+            if d.get("uuid") == target_uuid:
+                return d
+        return None
+
 
 MODE_SPEED = "moderate"
 global_game_manager = GM.GameManager()
@@ -155,8 +172,11 @@ def setup_config(config):
         config["ante"],
         config["blind_structure"],
     )
-    for player in config["ai_players"]:
-        global_game_manager.join_ai_player(player["name"], player["path"])
+    for player in config["player1"]:
+        global_game_manager.join_ai_player1s(player["name"], player["path"])
+
+    for player in config["player2"]:
+        global_game_manager.join_ai_player2s(player["name"], player["path"])
 
 
 def start_server(config_path, port, speed):
@@ -164,7 +184,6 @@ def start_server(config_path, port, speed):
     with open(config_path, "rb") as f:
         config = yaml.safe_load(f)
     setup_config(config)
-
     MODE_SPEED = speed
     app = Application()
     app.listen(port)

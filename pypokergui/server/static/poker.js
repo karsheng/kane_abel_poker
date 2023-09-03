@@ -35,7 +35,16 @@ function registerPlayer(form) {
 function startGame() {
   message = {};
   message["type"] = "action_start_game";
-  updater.socket.send(JSON.stringify(message));
+  const player1 = $("#player1-box input[type='radio']:checked").val();
+  const player2 = $("#player2-box input[type='radio']:checked").val();
+
+  if (player1 == null || player2 == null) {
+    alert("Please choose both player 1 and 2");
+  } else {
+    message["player1"] = player1;
+    message["player2"] = player2;
+    updater.socket.send(JSON.stringify(message));
+  }
 }
 
 /*
