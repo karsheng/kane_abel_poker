@@ -5,13 +5,21 @@ from pypokerengine.engine.player import Player
 from pypokerengine.engine.round_manager import RoundManager
 from pypokerengine.engine.message_builder import MessageBuilder
 from pypokerengine.engine.poker_constants import PokerConstants as Const
+from pypokerengine.utils.card_utils import gen_cheat_deck
 
 class EngineWrapper(object):
+    def __init__(self):
+        self.use_cheat_deck = False
+        self.cheat_deck = ["SA","SK","SQ","SJ","ST","S9","S8","S7","S6"]
 
-    def start_game(self, players_info, game_config):
+    def start_game(self, players_info, game_config, use_cheat_deck=False):
         self.config = game_config
+        self.use_cheat_deck = use_cheat_deck
         # setup table
         table = Table()
+        if self.use_cheat_deck:
+            table.deck = gen_cheat_deck(self.cheat_deck)
+            table.deck.shuffle()
         for uuid, name in players_info.items():
             player = Player(uuid, game_config['initial_stack'], name)
             table.seats.sitdown(player)
@@ -45,6 +53,9 @@ class EngineWrapper(object):
             msgs = _parse_broadcast_destination([game_result_msg], table)
             return finished_state, msgs
         else:
+            if self.use_cheat_deck:
+                table.deck = gen_cheat_deck(self.cheat_deck)
+                table.deck.shuffle()
             return RoundManager.start_new_round(round_count, small_blind, ante, table)
 
     def _has_game_finished(self, round_count, table, max_round):

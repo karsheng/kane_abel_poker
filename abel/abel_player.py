@@ -36,7 +36,8 @@ class Abel(BasePokerPlayer):
         stacks = self.starting_stacks.copy()
 
         community_card = round_state["community_card"]
-        infoset = f"{hole_card}_{community_card}"
+        sorted_community_card = sorted(community_card[:3]) + community_card[3:]
+        infoset = f"{sorted(hole_card)}_{sorted_community_card}"
         action_histories = round_state["action_histories"]
         pot = 0
         history = [[], [], [], []]

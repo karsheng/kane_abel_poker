@@ -42,7 +42,12 @@ class GameManager(object):
         players_info = Engine.gen_players_info(uuid_list, name_list)
         self.ai_players = build_ai_players(self.members_info)
         self.engine = Engine.EngineWrapper()
-        self.latest_messages = self.engine.start_game(players_info, self.rule)
+        use_cheat_deck = False
+        if "abel_player" in name_list:
+            use_cheat_deck = True
+        self.latest_messages = self.engine.start_game(
+            players_info, self.rule, use_cheat_deck
+        )
         self.is_playing_poker = True
         self.next_player_uuid = fetch_next_player_uuid(self.latest_messages)
 
