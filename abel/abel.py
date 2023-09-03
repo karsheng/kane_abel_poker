@@ -1,7 +1,7 @@
 from pypokerengine.players import BasePokerPlayer
-from pypokerengine.utils.card_utils import gen_cards, estimate_hole_card_win_rate
 from collections import defaultdict
 import ast
+import random
 
 
 class Abel(BasePokerPlayer):
@@ -24,8 +24,13 @@ class Abel(BasePokerPlayer):
             strategy = defaultdict(int, ast.literal_eval(strategy_str))
             self.strategies[infoset] = strategy
 
-    def get_strategy(self, infoset):
-        return self.strategies[infoset]
+    def get_strategy(self, infoset, valid_actions, pot):
+        strategy = self.strategies[infoset]
+        if strategy == 0:
+            options = self.get_options_from_valid_actions(valid_actions, pot)
+            n = len(options)
+            strategy = {a: 1 / n for a in options}
+        return strategy
 
     def generate_infoset(self, hole_card, round_state):
         stacks = self.starting_stacks.copy()
@@ -88,12 +93,53 @@ class Abel(BasePokerPlayer):
 
         return nearest_value(all_bet_actions, bet_to_pot)
 
+    def get_options_from_valid_actions(self, valid_actions, pot):
+        options = []
+        for action in valid_actions:
+            if action["action"] == "fold":
+                options.append("f")
+            elif action["action"] == "call":
+                options.append("c")
+            elif action["action"] == "raise":
+                min_bet = action["amount"]["min"]
+                max_bet = action["amount"]["max"]
+                for i in [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0]:
+                    bet = i * pot
+                    if bet >= min_bet and bet < max_bet:
+                        options.append(i)
+                options.append("a")
+            else:
+                options.append(action["action"])
+        return options
+
+    def generate_action_and_amount(self, infoset, pot, valid_actions):
+        strategy = self.get_strategy(infoset, valid_actions, pot)
+        strat_sum = 0
+        dart = random.random()
+        for a in strategy:
+            strat_sum += strategy[a]
+            if dart < strat_sum:
+                act = a
+                break
+        if act == "f":
+            action = "fold"
+            amount = 0
+        elif act == "c":
+            action = "call"
+            amount = valid_actions[1]["amount"]
+        elif act == "a":
+            action = "raise"
+            amount = valid_actions[2]["amount"]["max"]
+        else:
+            action = "raise"
+            amount = act * pot
+
+        return action, amount
+
     def declare_action(self, valid_actions, hole_card, round_state):
-        action = "raise"
-        amount = 10
-        seats = round_state["seats"]
         infoset = self.generate_infoset(hole_card, round_state)
-        breakpoint()
+        pot = round_state["pot"]["main"]["amount"]
+        action, amount = self.generate_action_and_amount(infoset, pot, valid_actions)
         return action, amount
 
     def receive_game_start_message(self, game_info):
