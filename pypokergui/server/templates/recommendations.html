@@ -1,0 +1,10 @@
+<legend>Recommendations</legend>
+<ul class="list-group">
+  {% for name, rec in recommendations.items() %}
+  <li class="list-group-item">
+    <span>{{name.upper()}}</span>
+    :
+    <span>{{rec}}</span>
+  </li>
+  {% end %}
+</ul>

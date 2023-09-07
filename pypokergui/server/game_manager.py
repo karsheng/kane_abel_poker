@@ -1,5 +1,7 @@
 import pypokergui.engine_wrapper as Engine
 import pypokergui.ai_generator as AG
+from abel.abel_player import setup_ai as setup_abel
+from kane.strategic_kane import setup_ai as setup_kane
 
 
 class GameManager(object):
@@ -14,6 +16,9 @@ class GameManager(object):
         self.latest_messages = []
         self.next_player_uuid = None
         self.round_hole_cards = {}
+        self.abel = setup_abel()
+        self.kane = setup_kane()
+        self.current_recommendations = {}
 
     def define_rule(self, max_round, initial_stack, small_blind, ante, blind_structure):
         self.rule = Engine.gen_game_config(
@@ -85,6 +90,14 @@ class GameManager(object):
             ask_message["message"]["valid_actions"],
             ask_message["message"]["hole_card"],
             ask_message["message"]["round_state"],
+        )
+
+    def get_recommendations(self, valid_actions, hole_card, round_state):
+        self.current_recommendations["kane"] = self.kane.declare_action(
+            valid_actions, hole_card, round_state
+        )
+        self.current_recommendations["abel"] = self.abel.declare_action(
+            valid_actions, hole_card, round_state
         )
 
 

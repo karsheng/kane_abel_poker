@@ -128,6 +128,7 @@ var updater = {
     var node = $(message.html);
     $("#container").html(node);
     $("#declare_action_form").hide();
+    $("#recommendations_box").hide();
     $("#declare_action_form").on("submit", function () {
       declareAction($(this));
       return false;
@@ -140,6 +141,7 @@ var updater = {
    */
   updateGame: function (message) {
     $("#declare_action_form").hide();
+    $("#recommendations_box").hide();
     content = message["content"];
     window.console.log("updateGame: " + JSON.stringify(content));
     message_type = content["update_type"];
@@ -155,7 +157,12 @@ var updater = {
       updater.gameResult(content.event_html);
     } else if ("ask_message" == message_type) {
       $("#declare_action_form").show();
-      updater.askAction(content.table_html, content.event_html);
+      $("#recommendations_box").show();
+      updater.askAction(
+        content.table_html,
+        content.event_html,
+        content.rec_html
+      );
     } else {
       window.console.error("unexpected message in updateGame: " + content);
     }
@@ -184,9 +191,10 @@ var updater = {
     $("#event_box").html($(event_html));
   },
 
-  askAction: function (table_html, event_html) {
+  askAction: function (table_html, event_html, rec_html) {
     $("#table").html($(table_html));
     $("#event_box").html($(event_html));
+    $("#recommendations_box").html($(rec_html));
   },
 
   alert_restart_server: function (message) {

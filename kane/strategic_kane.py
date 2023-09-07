@@ -29,10 +29,10 @@ class StrategicKane(BasePokerPlayer):
         return action["action"], action["amount"]
 
     def receive_game_start_message(self, game_info):
-        self.nb_player = game_info["player_num"]
+        pass
 
     def receive_round_start_message(self, round_count, hole_card, seats):
-        pass
+        self.nb_player = len(seats)
 
     def receive_street_start_message(self, street, round_state):
         pass
@@ -44,5 +44,5 @@ class StrategicKane(BasePokerPlayer):
         pass
 
 
-def setup_ai():
+def setup_ai() -> StrategicKane:
     return StrategicKane()

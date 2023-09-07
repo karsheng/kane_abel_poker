@@ -159,5 +159,5 @@ class Abel(BasePokerPlayer):
         pass
 
 
-def setup_ai():
+def setup_ai() -> Abel:
     return Abel("holdemstrat.txt")

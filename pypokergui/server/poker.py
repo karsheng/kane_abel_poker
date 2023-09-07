@@ -31,7 +31,7 @@ define(
     help="path to game config",
     type=str,
 )
-define("speed", default="fast", help="how fast game progress", type=str)
+define("speed", default="moderate", help="how fast game progress", type=str)
 
 
 class Application(tornado.web.Application):

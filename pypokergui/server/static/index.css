@@ -63,6 +63,10 @@ body {
   padding: 10px;
 }
 
+#recommendations_box{
+  padding: 10px;
+}
+
 #round-state-table {
   margin-top: 30px;
   padding: 10px;

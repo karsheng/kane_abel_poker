@@ -94,6 +94,29 @@ def broadcast_update_game(handler, game_manager, sockets, mode="moderate"):
                     if update["message"]["round_state"]["street"] == "preflop":
                         game_manager.get_current_hole_cards()
 
+                if update["message"]["message_type"] == "round_start_message":
+                    round_count = update["message"]["round_count"]
+                    hole_card = update["message"]["hole_card"]
+                    seats = update["message"]["seats"]
+
+                    game_manager.abel.receive_round_start_message(
+                        round_count, hole_card, seats
+                    )
+
+                    game_manager.kane.receive_round_start_message(
+                        round_count, hole_card, seats
+                    )
+
+                if update["message"]["message_type"] == "ask_message":
+                    valid_actions = update["message"]["valid_actions"]
+                    round_state = update["message"]["round_state"]
+                    hole_card = update["message"]["hole_card"]
+
+                    game_manager.get_recommendations(
+                        valid_actions, hole_card, round_state
+                    )
+                    update["recommendations"] = game_manager.current_recommendations
+
                 update["current_hole_cards"] = game_manager.round_hole_cards
 
                 message = _gen_game_update_message(handler, update)
@@ -193,6 +216,8 @@ def _gen_game_update_message(handler, message):
         hole_card = message["message"]["hole_card"]
         valid_actions = message["message"]["valid_actions"]
         action_histories = message["message"]["action_histories"]
+        recommendations = message["recommendations"]
+
         table_html_str = handler.render_string(
             "round_state.html", round_state=round_state
         )
@@ -202,10 +227,15 @@ def _gen_game_update_message(handler, message):
             valid_actions=valid_actions,
             action_histories=action_histories,
         )
+
+        recommendations_html_str = handler.render_string(
+            "recommendations.html", recommendations=recommendations
+        )
         content = {
             "update_type": message_type,
             "table_html": tornado.escape.to_basestring(table_html_str),
             "event_html": tornado.escape.to_basestring(event_html_str),
+            "rec_html": tornado.escape.to_basestring(recommendations_html_str),
         }
     else:
         raise Exception("Unexpected message received : %r" % message)
