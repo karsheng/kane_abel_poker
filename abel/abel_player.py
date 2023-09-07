@@ -113,7 +113,7 @@ class Abel(BasePokerPlayer):
                 options.append(action["action"])
         return options
 
-    def generate_action_and_amount(self, infoset, pot, valid_actions):
+    def generate_action_and_amount(self, infoset, pot, valid_actions, round_state):
         strategy = self.get_strategy(infoset, valid_actions, pot)
         strat_sum = 0
         dart = random.random()
@@ -135,12 +135,27 @@ class Abel(BasePokerPlayer):
             action = "raise"
             amount = act * pot
 
+        # check if possible instead of fold
+        if action == "fold":
+            call_amount = valid_actions[1]["amount"]
+            if call_amount == 0:
+                action = "call"
+                amount = 0
+            if round_state["street"] == "preflop":
+                no_of_actions = len(round_state["action_histories"]["preflop"])
+                # as big blind and call amount is equal to big blind amount
+                if no_of_actions == 3 and call_amount == 2:
+                    action = "call"
+                    amount = call_amount
+
         return action, amount
 
     def declare_action(self, valid_actions, hole_card, round_state):
         infoset = self.generate_infoset(hole_card, round_state)
         pot = round_state["pot"]["main"]["amount"]
-        action, amount = self.generate_action_and_amount(infoset, pot, valid_actions)
+        action, amount = self.generate_action_and_amount(
+            infoset, pot, valid_actions, round_state
+        )
         return action, amount
 
     def receive_game_start_message(self, game_info):

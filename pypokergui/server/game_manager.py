@@ -30,7 +30,7 @@ class GameManager(object):
         self.player1s.append(gen_ai_player_info(name, ai_uuid, setup_script_path))
 
     def join_ai_player2s(self, name, setup_script_path):
-        ai_uuid = str(len(self.player2s))
+        ai_uuid = str(len(self.player2s) + len(self.player1s))
         self.player2s.append(gen_ai_player_info(name, ai_uuid, setup_script_path))
 
     def join_ai_player(self, name, setup_script_path):
