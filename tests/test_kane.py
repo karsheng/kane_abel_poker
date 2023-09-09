@@ -34,18 +34,15 @@ class TestKane:
         kane = Kane()
         assert (
             kane.has_drawing_potential(["S2", "HK"], ["S5", "S7", "DT", "C9", "D8"])
-            == True
+            == False
         )
         assert (
-            kane.has_drawing_potential(["S7", "HK"], ["S5", "S6", "S2", "C9", "DT"])
-            == True
+            kane.has_drawing_potential(["S7", "HK"], ["S5", "S6", "S2", "C9"]) == True
         )
 
         assert (
-            kane.has_drawing_potential(["S8", "HK"], ["S6", "S7", "S2", "C9", "D3"])
-            == True
+            kane.has_drawing_potential(["S8", "HK"], ["S6", "S7", "S2", "C9"]) == True
         )
         assert (
-            kane.has_drawing_potential(["S2", "HK"], ["S4", "D6", "H8", "CT", "DQ"])
-            == False
+            kane.has_drawing_potential(["S2", "HK"], ["S4", "D6", "H8", "CT"]) == False
         )

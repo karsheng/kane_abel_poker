@@ -5,4 +5,5 @@ tornado
 numpy
 pytest
 setuptools
+requests
 -e .

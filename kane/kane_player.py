@@ -48,7 +48,7 @@ class Kane(BasePokerPlayer):
             else:
                 action = valid_actions[0]  # fold
 
-        return action["action"], action["amount"]
+        return action["action"], int(action["amount"])
 
     def calculate_win_probability(
         self, num_simulations, total_players, hole_cards, community_cards=None
