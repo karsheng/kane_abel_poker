@@ -151,12 +151,27 @@ class Abel(BasePokerPlayer):
         return action, amount
 
     def declare_action(self, valid_actions, hole_card, round_state):
+        big_blind_amount = round_state["small_blind_amount"] * 2
+        valid_actions = self._process_valid_actions(valid_actions, big_blind_amount)
         infoset = self.generate_infoset(hole_card, round_state)
         pot = round_state["pot"]["main"]["amount"]
         action, amount = self.generate_action_and_amount(
             infoset, pot, valid_actions, round_state
         )
-        return action, amount
+        return action, int(amount)
+
+    def _process_valid_actions(self, valid_actions, big_blind_amount):
+        parsed_valid_actions = []
+        for action in valid_actions:
+            if action["action"] == "raise":
+                if isinstance(action["amount"], (int, float)):
+                    max_amount = action["amount"]
+                    action["amount"] = {}
+                    action["amount"]["min"] = big_blind_amount
+                    action["amount"]["max"] = max_amount
+
+            parsed_valid_actions.append(action)
+        return parsed_valid_actions
 
     def receive_game_start_message(self, game_info):
         self.nb_player = game_info["player_num"]

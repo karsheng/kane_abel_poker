@@ -116,6 +116,8 @@ def broadcast_update_game(handler, game_manager, sockets, mode="moderate"):
                         valid_actions, hole_card, round_state
                     )
                     update["recommendations"] = game_manager.current_recommendations
+                    update["win_rate"] = game_manager.get_win_rate()
+                    update["is_drawing"] = game_manager.get_is_drawing()
 
                 update["current_hole_cards"] = game_manager.round_hole_cards
 
@@ -217,6 +219,8 @@ def _gen_game_update_message(handler, message):
         valid_actions = message["message"]["valid_actions"]
         action_histories = message["message"]["action_histories"]
         recommendations = message["recommendations"]
+        win_rate = int(message["win_rate"] * 100)
+        is_drawing = message["is_drawing"]
 
         table_html_str = handler.render_string(
             "round_state.html", round_state=round_state
@@ -229,7 +233,10 @@ def _gen_game_update_message(handler, message):
         )
 
         recommendations_html_str = handler.render_string(
-            "recommendations.html", recommendations=recommendations
+            "recommendations.html",
+            recommendations=recommendations,
+            win_rate=win_rate,
+            is_drawing=is_drawing,
         )
         content = {
             "update_type": message_type,

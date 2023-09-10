@@ -10,6 +10,18 @@ NB_SIMULATION = 1000
 
 
 class Kane(BasePokerPlayer):
+    def __init__(self):
+        self._win_rate = None
+        self._is_drawing = None
+
+    @property
+    def win_rate(self):
+        return self._win_rate
+
+    @property
+    def is_drawing(self):
+        return self._is_drawing
+
     def declare_action(self, valid_actions, hole_card, round_state):
         # Estimate the win rate
         win_rate = self.calculate_win_probability(
@@ -47,6 +59,9 @@ class Kane(BasePokerPlayer):
                 action = valid_actions[1]
             else:
                 action = valid_actions[0]  # fold
+
+        self._win_rate = win_rate
+        self._is_drawing = is_drawing
 
         return action["action"], int(action["amount"])
 
