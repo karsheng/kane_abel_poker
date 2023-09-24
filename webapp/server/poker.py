@@ -2,7 +2,7 @@ import os
 import sys
 
 root = os.path.join(os.path.dirname(__file__), "../" * 2)
-src_path = os.path.join(root, "pypokergui")
+src_path = os.path.join(root, "webapp")
 sys.path.append(root)
 sys.path.append(src_path)
 
@@ -16,8 +16,8 @@ from tornado.options import define, options
 
 import pypokerengine.utils.action_utils as AU
 
-import pypokergui.server.game_manager as GM
-import pypokergui.server.message_manager as MM
+import webapp.server.game_manager as GM
+import webapp.server.message_manager as MM
 
 define(
     "port",

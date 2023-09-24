@@ -1,5 +1,5 @@
-import pypokergui.engine_wrapper as Engine
-import pypokergui.ai_generator as AG
+import webapp.engine_wrapper as Engine
+import webapp.ai_generator as AG
 from abel.abel_player import Abel, setup_ai as setup_abel
 from kane.kane_player import Kane, setup_ai as setup_kane
 
