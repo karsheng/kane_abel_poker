@@ -1,15 +1,15 @@
 player1:
   - name: abel_player_1
     path: abel/abel_player.py
-  - name: fish_player_1
-    path: kane/fish_player.py
+  - name: kane_player_1
+    path: kane/kane_player.py
 player2:
   - name: abel_player_2
     path: abel/abel_player.py
-  - name: fish_player_2
-    path: kane/fish_player.py
+  - name: kane_player_2
+    path: kane/kane_player.py
 ante: 0
 blind_structure: null
-initial_stack: 100
+initial_stack: 20000
 max_round: 10
-small_blind: 1
+small_blind: 50

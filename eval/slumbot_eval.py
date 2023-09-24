@@ -50,6 +50,7 @@ import sys
 import argparse
 from pypokerengine.api.emulator import Emulator
 from kane.kane_player import Kane
+import pandas as pd
 
 host = "slumbot.com"
 
@@ -421,7 +422,8 @@ def Login(username, password):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Slumbot API example")
+    results = []
+    parser = argparse.ArgumentParser(description="Slumbot API")
     parser.add_argument("--username", type=str)
     parser.add_argument("--password", type=str)
     args = parser.parse_args()
@@ -435,12 +437,20 @@ def main():
     # To avoid SSLError:
     #   import urllib3
     #   urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    num_hands = 100
+    num_hands = 1000
     winnings = 0
     for h in range(num_hands):
         (token, hand_winnings) = PlayHand(token)
         winnings += hand_winnings
+        if hand_winnings > 0:
+            results.append({"winnings": hand_winnings, "won": 1})
+        else:
+            results.append({"winnings": hand_winnings, "won": 0})
+
     print("Total winnings: %i" % winnings)
+
+    df = pd.DataFrame(results)
+    df.to_csv("eval/results/slumbot_eval.csv", index=False)
 
 
 if __name__ == "__main__":
