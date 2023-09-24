@@ -13,6 +13,8 @@ class Kane(BasePokerPlayer):
     def __init__(self):
         self._win_rate = None
         self._is_drawing = None
+        self.pot_odds = None
+        self.ev = None
 
     @property
     def win_rate(self):
@@ -62,6 +64,11 @@ class Kane(BasePokerPlayer):
 
         self._win_rate = win_rate
         self._is_drawing = is_drawing
+
+        pot = round_state["pot"]["main"]["amount"]
+        call_amount = valid_actions[1]["amount"]
+        self.pot_odds = call_amount / (pot + call_amount)
+        self.ev = win_rate * (pot + call_amount) - (1 - win_rate) * call_amount
 
         return action["action"], int(action["amount"])
 

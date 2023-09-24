@@ -106,6 +106,12 @@ class GameManager(object):
     def get_is_drawing(self):
         return self.kane.is_drawing
 
+    def get_pot_odds(self):
+        return self.kane.pot_odds
+
+    def get_ev(self):
+        return self.kane.ev
+
 
 def fetch_next_player_uuid(new_messages):
     if not has_game_finished(new_messages):
