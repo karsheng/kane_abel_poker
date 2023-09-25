@@ -4,7 +4,7 @@ from pypokerengine.engine.table import Table
 from pypokerengine.engine.player import Player
 from pypokerengine.engine.deck import Deck
 from collections import defaultdict
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 import random
 from copy import deepcopy
 from pypokerengine.utils.game_state_utils import (
@@ -16,7 +16,29 @@ import pickle
 
 
 class Node:
-    def __init__(self, bet_options):
+    def __init__(self, bet_options: List[str]) -> None:
+        """
+        Initialize a node for MCCFR.
+
+        Parameters
+        ----------
+        bet_options : List[str]
+            Available bet options for the current node (e.g. [check, bet, fold]).
+
+        Attributes
+        ----------
+        num_actions : int
+            Number of available bet options.
+        regret_sum : defaultdict[int]
+            Cumulative regrets for each action over time.
+        strategy : defaultdict[int]
+            Current strategy for the node given the current regret sums.
+        strategy_sum : defaultdict[int]
+            Cumulative strategy over time; used to calculate the average strategy.
+        bet_options : List[str]
+            Available bet options for the current node.
+        """
+
         # Initialize node with the available bet options
         self.num_actions = len(bet_options)
 
@@ -33,7 +55,29 @@ class Node:
         self.bet_options = bet_options
 
     @classmethod
-    def convert_to_relative_pot(cls, valid_actions, pot_size):
+    def convert_to_relative_pot(
+        cls, valid_actions: List[Dict[str, Union[str, Dict[str, int]]]], pot_size: int
+    ) -> List[Union[str, float]]:
+        """
+        Convert valid actions to a relative pot-based representation.
+
+        Parameters
+        ----------
+        valid_actions : List[Dict[str, Union[str, Dict[str, int]]]]
+            List of valid actions. Each action is a dictionary with action type and amount details.
+        pot_size : int
+            Current size of the pot.
+
+        Returns
+        -------
+        List[Union[str, float]]
+            Converted list of actions in relative pot terms.
+
+        Notes
+        -----
+        This method should be adjusted based on desired granularity of raise amounts and specific game rules.
+        """
+
         actions = []
 
         # Extract call and raise actions
@@ -73,8 +117,16 @@ class Node:
 
         return actions
 
-    def get_strategy(self):
-        # This method computes and returns the current strategy for the node based on regret matching
+    def get_strategy(self) -> Dict[str, float]:
+        """
+        Compute and return the current strategy for the node based on regret matching.
+
+        Returns
+        -------
+        Dict[str, float]
+            Current strategy for the node.
+        """
+
         normalizing_sum = 0
 
         # Calculate strategy proportional to positive regrets
@@ -97,8 +149,16 @@ class Node:
 
         return self.strategy
 
-    def get_average_strategy(self):
-        # This method computes and returns the average strategy across all iterations
+    def get_average_strategy(self) -> Dict[str, float]:
+        """
+        Compute and return the average strategy across all iterations.
+
+        Returns
+        -------
+        Dict[str, float]
+            Average strategy for the node.
+        """
+
         avg_strategy = defaultdict(int)
         normalizing_sum = 0
 
@@ -174,7 +234,17 @@ FULL_DECK = [
 
 
 class HoldemCFR:
-    def __init__(self, iterations, custom_deck=None):
+    def __init__(self, iterations: int, custom_deck: List[str] = None):
+        """
+        Initialize the HoldemCFR instance.
+
+        Parameters
+        ----------
+        iterations : int
+            Number of training iterations.
+        custom_deck : List[str], optional
+            Custom deck to be used, default is None.
+        """
         self.emulator = Emulator()
         self.iterations = iterations  # Number of iterations to train
         self.nodes: Dict[str, Node] = {}  # Nodes used in the CFR process
@@ -204,16 +274,61 @@ class HoldemCFR:
 
         self.custom_deck = custom_deck
 
-    def get_street(self, round_state):
+    def get_street(self, round_state: Dict[str, Union[int, str]]) -> int:
+        """
+        Get the street (round number) based on the round state.
+
+        Parameters
+        ----------
+        round_state : Dict[str, Union[int, str]]
+            The current round state.
+
+        Returns
+        -------
+        int
+            The street/round number.
+        """
         return self.street_mapper[round_state["street"]]
 
-    def generate_custom_deck(self, cards: List[str]):
+    def generate_custom_deck(self, cards: List[str]) -> Deck:
+        """
+        Generate a custom deck based on provided cards.
+
+        Parameters
+        ----------
+        cards : List[str]
+            List of card representations to be included in the deck.
+
+        Returns
+        -------
+        Deck
+            The custom deck.
+        """
         deck = Deck()
         deck.deck = gen_cards(cards)
         deck.shuffle()
         return deck
 
-    def restore_game_state_fully(self, round_state, cards):
+    def restore_game_state_fully(
+        self,
+        round_state: Dict[str, Union[List[str], Dict]],
+        cards: Dict[str, List[str]],
+    ) -> Dict:
+        """
+        Restore the full game state including table, players, and deck.
+
+        Parameters
+        ----------
+        round_state : Dict[str, Union[List[str], Dict]]
+            Information about the current round.
+        cards : Dict[str, List[str]]
+            Mapping of player UUIDs to their respective hole cards.
+
+        Returns
+        -------
+        Dict
+            The restored game state.
+        """
         game_state = restore_game_state(round_state)
         for player in game_state["table"].seats.players:
             hole_card = gen_cards(cards[player.uuid])
@@ -234,6 +349,9 @@ class HoldemCFR:
         return game_state
 
     def cfr_iterations_external(self):
+        """
+        Execute the Counterfactual Regret Minimization iterations externally.
+        """
         util = np.zeros(2)  # Utility initialization for both players
 
         # Loop through each iteration to train
@@ -265,8 +383,34 @@ class HoldemCFR:
                 print(i, self.nodes[i].get_average_strategy())
 
     def external_cfr(
-        self, game_state, events, history, nodes_touched, traversing_player_id
-    ):
+        self,
+        game_state: Dict,
+        events: List[Dict],
+        history: List[List[str]],
+        nodes_touched: int,
+        traversing_player_id: int,
+    ) -> float:
+        """
+        Execute the external Counterfactual Regret Minimization.
+
+        Parameters
+        ----------
+        game_state : Dict
+            The current game state.
+        events : List[Dict]
+            List of events occurred.
+        history : List[List[str]]
+            History of actions taken.
+        nodes_touched : int
+            Number of nodes touched during CFR.
+        traversing_player_id : int
+            ID of the traversing player.
+
+        Returns
+        -------
+        float
+            Utility of the game for the traversing player.
+        """
         event = events[-1]
         if "round_state" not in event:
             event = events[-2]
@@ -377,11 +521,51 @@ class HoldemCFR:
         return 0
 
 
-def get_hole_cards(player: Player):
+def get_hole_cards(player: "Player") -> List[str]:
+    """
+    Retrieve the hole cards of the player and convert them to strings.
+
+    Parameters
+    ----------
+    player : Player
+        The player object with hole cards.
+
+    Returns
+    -------
+    List[str]
+        List of player's hole cards represented as strings.
+    """
     return [str(c) for c in player.hole_card]
 
 
-def derive_action(a, valid_actions, pot_size):
+def derive_action(
+    a: Union[str, int],
+    valid_actions: List[Dict[str, Union[str, Dict[str, int]]]],
+    pot_size: int,
+) -> Tuple[str, int]:
+    """
+    Derive the action and its corresponding amount based on the shorthand and pot size.
+
+    Parameters
+    ----------
+    a : Union[str, int]
+        Shorthand or multiplier for the action.
+    valid_actions : List[Dict[str, Union[str, Dict[str, int]]]]
+        List of valid actions with their corresponding amounts.
+    pot_size : int
+        Current size of the pot.
+
+    Returns
+    -------
+    Tuple[str, int]
+        A tuple containing the action ("fold", "call", or "raise") and its corresponding amount.
+
+    Raises
+    ------
+    ValueError
+        If the action shorthand is not recognized.
+    """
+
     if a == "f":
         return ("fold", 0)
     elif a == "c":
@@ -410,6 +594,13 @@ if __name__ == "__main__":
         "S8",
         "S7",
         "S6",
+        "HA",
+        "HK",
+        "HQ",
+        "HJ",
+        "HT",
+        "H9",
+        "H8",
     ]
 
     # Unpickling from a file
