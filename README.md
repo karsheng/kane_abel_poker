@@ -5,7 +5,7 @@
 "Kane and Abel" is a project dedicated to the development of advanced artificial intelligence solutions for poker, a complex multi-agent environment with hidden information. We present two AI entities, `Kane` and `Abel`, with distinct strategies to approach the poker challenge. Kane leans on deterministic heuristics and FSM while Abel exploits the Counterfactual Regret Minimization paradigm. Accompanying these AIs is a complementary web application tailored for players to engage in poker matches and learn from their AI opponents.
 
 <div style="text-align:center">
-    <img src="assets/poker.jpeg" alt="Sample Image" max-width="100%" height="600px"/>
+    <img src="assets/poker.jpeg" alt="Kane Abel Poker" width="100%"/>
 </div>
 
 ## Installation
