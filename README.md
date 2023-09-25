@@ -66,10 +66,6 @@ deactivate
 
 Check out the live demo of the project [here](https://kane-abel-poker-8ed0c35431e5.herokuapp.com/).
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
-
 ## Acknowledgements
 
 - Special thanks to the contributors and everyone involved in providing feedback to improve the AIs.
